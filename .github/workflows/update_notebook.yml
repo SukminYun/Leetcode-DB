@@ -2,8 +2,8 @@ name: Convert Py to Jupyter Notebook
 
 on:
   push:
-    paths:
-      - '**.py'
+    branches:
+      - main  # 메인 브랜치에 푸시가 들어오면 무조건 실행
 
 jobs:
   build:
@@ -14,8 +14,7 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-      with:
-        fetch-depth: 0 # 전체 히스토리를 가져옵니다
+      # 전체 히스토리 필요 없음, 최신 파일만 있으면 됨
 
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -24,48 +23,25 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install -r requirements.txt
+        pip install nbformat
 
-    - name: Run conversion script
+    - name: Run Smart Sync script
       run: |
-        # [수정됨] 최근 커밋 1개가 아니라, 최근 2개의 커밋 범위를 뒤져서 .py 파일을 찾습니다.
-        # LeetHub가 코드 -> 리드미 순으로 2번 커밋하기 때문입니다.
-        CHANGED_FILES=$(git diff --name-only HEAD~2 HEAD | grep '\.py$' || true)
-        
-        if [ -z "$CHANGED_FILES" ]; then
-          echo "No .py files found in the last 2 commits."
-          # 혹시 커밋이 1개만 발생했을 경우를 대비해 한 번 더 체크 (안전장치)
-          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD | grep '\.py$' || true)
-        fi
-
-        if [ -z "$CHANGED_FILES" ]; then
-          echo "Still no .py files found. Skipping."
-        else
-          echo "Processing files: $CHANGED_FILES"
-          python convert.py $CHANGED_FILES
-        fi
+        # 모든 파일을 스캔해서 동기화
+        python convert.py
 
     - name: Commit and push changes
       run: |
-            git config --global user.name "GitHub Action"
-            git config --global user.email "action@github.com"
-            
-            # 디버깅: 현재 상태 확인
-            echo ">> Checking git status before add:"
-            git status
-            
-            # 모든 변경사항 스테이징
-            git add .
-            
-            # 디버깅: 스테이징 후 상태 확인
-            echo ">> Checking git status after add:"
-            git status
-            
-            if git diff --quiet && git diff --staged --quiet; then
-              echo "No changes to commit."
-            else
-              git commit -m "Auto-convert to Notebook via GitHub Action"
-              git pull --rebase origin main
-              git push origin main
-            fi
-            
+        git config --global user.name "GitHub Action"
+        git config --global user.email "action@github.com"
+        
+        git add .
+        
+        # 변경사항이 있을 때만 커밋
+        if git diff --quiet && git diff --staged --quiet; then
+          echo "All notebooks are up to date."
+        else
+          git commit -m "Sync notebooks via GitHub Action"
+          git pull --rebase origin main
+          git push origin main
+        fi
