@@ -24,3 +24,15 @@ Sync LC with Github : [LeetHub]([https://chromewebstore.google.com/detail/leetsy
 15. Recursion II
 16. Binary Search
 17. Machinge Learning 101
+
+<!---LeetCode Topics Start-->
+# LeetCode Topics
+## Array
+|  |
+| ------- |
+| [0026-remove-duplicates-from-sorted-array](https://github.com/SukminYun/Leetcode-DB/tree/master/0026-remove-duplicates-from-sorted-array) |
+## Two Pointers
+|  |
+| ------- |
+| [0026-remove-duplicates-from-sorted-array](https://github.com/SukminYun/Leetcode-DB/tree/master/0026-remove-duplicates-from-sorted-array) |
+<!---LeetCode Topics End-->
