@@ -15,7 +15,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
       with:
-        fetch-depth: 0 # 히스토리를 전부 가져와야 rebase 시 문제가 덜 발생합니다
+        fetch-depth: 0 # 전체 히스토리를 가져옵니다
 
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -28,10 +28,18 @@ jobs:
 
     - name: Run conversion script
       run: |
-        CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD | grep '\.py$' || true)
+        # [수정됨] 최근 커밋 1개가 아니라, 최근 2개의 커밋 범위를 뒤져서 .py 파일을 찾습니다.
+        # LeetHub가 코드 -> 리드미 순으로 2번 커밋하기 때문입니다.
+        CHANGED_FILES=$(git diff --name-only HEAD~2 HEAD | grep '\.py$' || true)
         
         if [ -z "$CHANGED_FILES" ]; then
-          echo "No .py files changed."
+          echo "No .py files found in the last 2 commits."
+          # 혹시 커밋이 1개만 발생했을 경우를 대비해 한 번 더 체크 (안전장치)
+          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD | grep '\.py$' || true)
+        fi
+
+        if [ -z "$CHANGED_FILES" ]; then
+          echo "Still no .py files found. Skipping."
         else
           echo "Processing files: $CHANGED_FILES"
           python convert.py $CHANGED_FILES
