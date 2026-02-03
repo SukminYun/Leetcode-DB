@@ -3,7 +3,8 @@ name: Convert Py to Jupyter Notebook
 on:
   push:
     branches:
-      - main  # 메인 브랜치에 푸시가 들어오면 무조건 실행
+      - main
+  workflow_dispatch: # 수동 실행 버튼 추가
 
 jobs:
   build:
@@ -14,7 +15,6 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-      # 전체 히스토리 필요 없음, 최신 파일만 있으면 됨
 
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -25,9 +25,8 @@ jobs:
       run: |
         pip install nbformat
 
-    - name: Run Smart Sync script
+    - name: Run Conversion Script
       run: |
-        # 모든 파일을 스캔해서 동기화
         python convert.py
 
     - name: Commit and push changes
@@ -37,11 +36,11 @@ jobs:
         
         git add .
         
-        # 변경사항이 있을 때만 커밋
+        # 변경사항이 있는지 확인하고 푸시
         if git diff --quiet && git diff --staged --quiet; then
-          echo "All notebooks are up to date."
+          echo "No changes to the notebook files."
         else
-          git commit -m "Sync notebooks via GitHub Action"
+          git commit -m "Update Notebook: Append new solution"
           git pull --rebase origin main
           git push origin main
         fi
