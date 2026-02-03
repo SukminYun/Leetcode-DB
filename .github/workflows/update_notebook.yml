@@ -3,19 +3,19 @@ name: Convert Py to Jupyter Notebook
 on:
   push:
     paths:
-      - '**.py'  # .py 파일이 푸시될 때만 실행
+      - '**.py'
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # 레포지토리에 쓸 권한 부여
+      contents: write
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
       with:
-        fetch-depth: 2 # 변경 사항을 감지하기 위해 히스토리 가져오기
+        fetch-depth: 0 # 히스토리를 전부 가져와야 rebase 시 문제가 덜 발생합니다
 
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -28,14 +28,12 @@ jobs:
 
     - name: Run conversion script
       run: |
-        # 최근 커밋에서 변경된 .py 파일 목록 추출
         CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD | grep '\.py$' || true)
         
         if [ -z "$CHANGED_FILES" ]; then
           echo "No .py files changed."
         else
           echo "Processing files: $CHANGED_FILES"
-          # 변경된 파일 목록을 스크립트에 전달
           python convert.py $CHANGED_FILES
         fi
 
@@ -43,6 +41,13 @@ jobs:
       run: |
         git config --global user.name "GitHub Action"
         git config --global user.email "action@github.com"
+        
         git add .
-        # 변경사항이 있을 때만 커밋
-        git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-convert to Notebook via GitHub Action" && git push)
+        
+        if git diff --quiet && git diff --staged --quiet; then
+          echo "No changes to commit."
+        else
+          git commit -m "Auto-convert to Notebook via GitHub Action"
+          git pull --rebase origin main
+          git push origin main
+        fi
